@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Commandify\Commandify.csproj"/>
+        <ProjectReference Include="..\Commandify.Processing.Abstractions\Commandify.Processing.Abstractions.csproj"/>
+    </ItemGroup>
+
+</Project>

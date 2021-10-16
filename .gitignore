@@ -417,7 +417,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
-.nuke/
+.nuke/temp/
 # JetBrains Rider
 .idea/
 *.sln.iml

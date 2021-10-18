@@ -19,7 +19,7 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
     InvokedTargets = new[] { nameof(Publish) }, PublishArtifacts = true)]
 class Build : NukeBuild
 {
-    public const string Version = "1.0.0";
+    public const string Version = "1.1.0";
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
@@ -27,7 +27,7 @@ class Build : NukeBuild
     [GitRepository] readonly GitRepository GitRepository;
 
     [Solution] readonly Solution Solution;
-    [Parameter] string NugetApiKey;
+    [Parameter] [Secret] string NugetApiKey;
 
     [Parameter] string NugetApiUrl = "https://api.nuget.org/v3/index.json";
     [Parameter] string NugetSymbolsUrl = "https://nuget.smbsrc.net/";
@@ -69,6 +69,7 @@ class Build : NukeBuild
             foreach (var project in Solution.AllProjects.Where(_ =>
                 !_.Name.Contains("Example") && !_.Name.Contains("Build")))
                 DotNetPack(_ => _.SetProject(project)
+                    .SetNoBuild(true)
                     .SetOutputDirectory(ArtifactsDirectory)
                     .SetIncludeSymbols(true)
                     .SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
@@ -86,12 +87,13 @@ class Build : NukeBuild
         .DependsOn(Pack)
         .Executes(() =>
         {
-            ArtifactsDirectory.GlobFiles()
+            ArtifactsDirectory.GlobFiles("*.nupkg")
                 .ForEach(x =>
                 {
                     DotNetNuGetPush(s => s
                         .SetTargetPath(x)
                         .SetSymbolSource(NugetSymbolsUrl)
+                        .SetSkipDuplicate(true)
                         .SetSource(NugetApiUrl)
                         .SetApiKey(NugetApiKey)
                     );

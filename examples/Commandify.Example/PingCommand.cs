@@ -1,6 +1,8 @@
 ﻿using System.Net.NetworkInformation;
 using Commandify.Processing.Abstractions;
 
+namespace Commandify.Example;
+
 public class PingCommand : ICommandHandler<CommandContext, PingArguments>
 {
     public static string Id => "ping";

@@ -2,15 +2,6 @@
 
 namespace Commandify;
 
-internal enum StringSegmentTrimMode
-{
-    None,
-    Quote,
-    DoubleQuote
-}
-
-internal record CommandDataSegment(string Value, StringSegmentTrimMode TrimMode);
-
 internal class CommandDataSegmentCollection
 {
     private readonly CommandDataSegment[] _sourceSegments;

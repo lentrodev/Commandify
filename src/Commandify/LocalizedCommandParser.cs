@@ -38,12 +38,19 @@ public class LocalizedCommandParser : ILocalizedCommandParser
         var matches = true;
 
         foreach (var commandNameSegment in commandName.Split(" "))
+        {
+            if (!stringSegmentCollection.SegmentsAvailable)
+            {
+                return new CommandParseResult(false, command, stringSegmentCollection.ToString());
+            }
+            
             if (string.Compare(commandNameSegment, stringSegmentCollection.Take(),
                     _commandParserConfiguration.StringComparisonOptions) != 0)
             {
                 matches = false;
                 break;
             }
+        }
 
         return new CommandParseResult(matches, command, stringSegmentCollection.ToString());
     }
@@ -59,12 +66,18 @@ public class LocalizedCommandParser : ILocalizedCommandParser
         var matches = true;
 
         foreach (var commandNameSegment in commandName.Split(" "))
+        {
+            if (!stringSegmentCollection.SegmentsAvailable)
+            {
+                return new CommandParseResult<TArguments>(false, command, stringSegmentCollection.ToString(), default);
+            }
             if (string.Compare(commandNameSegment, stringSegmentCollection.Take(),
                     _commandParserConfiguration.StringComparisonOptions) != 0)
             {
                 matches = false;
                 break;
             }
+        }
 
         var arguments = new TArguments();
 

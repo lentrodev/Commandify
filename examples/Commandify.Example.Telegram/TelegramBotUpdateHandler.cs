@@ -16,7 +16,7 @@ public class TelegramBotUpdateHandler : IUpdateHandler
 
     public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
-        var telegramCommandContext = new TelegramCommandContext<Message>(update.Message, botClient);
+        var telegramCommandContext = new TelegramCommandContext<Message>(update.Message, botClient, _ => _.Text);
 
         Task.Run(() => _messageCommandProcessor.Process(telegramCommandContext), cancellationToken);
 

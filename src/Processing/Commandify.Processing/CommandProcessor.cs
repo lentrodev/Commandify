@@ -5,43 +5,37 @@ using Commandify.Processing.Abstractions;
 
 namespace Commandify.Processing;
 
-public record CommandDescriptor(ICommand Command, Delegate Handler);
-
 public class CommandProcessor<TContext> : ICommandProcessor<TContext>
+    where TContext : ICommandContext
 {
     private readonly ICommandParser _commandParser;
     private readonly IEnumerable<CommandDescriptor> _commands;
-    private readonly CommandTextRetrieverDelegate<TContext> _commandTextRetriever;
     private readonly CultureInfoRetrieverDelegate<TContext> _cultureInfoRetriever;
     private readonly ILocalizedCommandParser _localizedCommandParser;
     private readonly bool _useCultureInfo;
 
-    private CommandProcessor(IEnumerable<CommandDescriptor> commands,
-        CommandTextRetrieverDelegate<TContext> commandTextRetriever)
+    private CommandProcessor(IEnumerable<CommandDescriptor> commands)
     {
         _commands = commands;
-        _commandTextRetriever = commandTextRetriever;
     }
 
-    public CommandProcessor(ICommandParser commandParser, IEnumerable<CommandDescriptor> commands,
-        CommandTextRetrieverDelegate<TContext> commandTextRetriever) : this(commands, commandTextRetriever)
+    public CommandProcessor(ICommandParser commandParser, IEnumerable<CommandDescriptor> commands) : this(commands)
     {
         _commandParser = commandParser;
         _useCultureInfo = false;
     }
 
     public CommandProcessor(ILocalizedCommandParser localizedCommandParser, IEnumerable<CommandDescriptor> commands,
-        CommandTextRetrieverDelegate<TContext> commandTextRetriever,
-        CultureInfoRetrieverDelegate<TContext> cultureInfoRetriever) : this(commands, commandTextRetriever)
+        CultureInfoRetrieverDelegate<TContext> cultureInfoRetriever) : this(commands)
     {
         _localizedCommandParser = localizedCommandParser;
         _cultureInfoRetriever = cultureInfoRetriever;
         _useCultureInfo = true;
     }
 
-    public void Process(TContext context)
+    public bool Process(TContext context)
     {
-        var commandText = _commandTextRetriever(context);
+        var commandText = context.Text;
 
         var cultureInfo = _useCultureInfo ? _cultureInfoRetriever(context) : null;
 
@@ -49,38 +43,74 @@ public class CommandProcessor<TContext> : ICommandProcessor<TContext>
         {
             var command = commandDescriptor.Command;
 
+            bool isMatch = true;
+            
             if (command.GetType().GetInterface(typeof(ICommand<>).Name) is { } genericInterface)
             {
                 object[] args = { context, commandText, cultureInfo, command, commandDescriptor.Handler };
 
-                GetType().GetMethod(nameof(ProcessCommandGeneric), BindingFlags.NonPublic | BindingFlags.Instance)
+                isMatch = (bool)GetType().GetMethod(nameof(ProcessCommandGeneric), BindingFlags.NonPublic | BindingFlags.Instance)
                     .MakeGenericMethod(genericInterface.GetGenericArguments().First())
                     .Invoke(this, args);
             }
             else
             {
-                ProcessCommand(context, commandText, cultureInfo, command, commandDescriptor.Handler);
+                isMatch = ProcessCommand(context, commandText, cultureInfo, command, commandDescriptor.Handler);
             }
+
+            if (isMatch)
+                return true;
         }
+
+        return false;
     }
 
-    private void ProcessCommand(TContext context, string commandText, CultureInfo? cultureInfo, ICommand command,
+    private bool ProcessCommand(TContext context, string commandText, CultureInfo? cultureInfo, ICommand command,
         Delegate commandHandler)
     {
         if (_useCultureInfo && _localizedCommandParser.Parse(command, cultureInfo, commandText) is
-            { Success: true } parseResult)
+            { Success: true,ResultText: {} resultText })
+        {
+            context.Text = resultText;
+            
             commandHandler.DynamicInvoke(context);
-        else if (_commandParser.Parse(command, commandText) is { Success: true }) commandHandler.DynamicInvoke(context);
+
+            return true;
+        }
+        if (_commandParser.Parse(command, commandText) is { Success: true, ResultText: {} resultText1 })
+        {
+            context.Text = resultText1;
+            
+            commandHandler.DynamicInvoke(context);
+            
+            return true;
+        }
+
+        return false;
     }
 
-    private void ProcessCommandGeneric<T>(TContext context, string commandText, CultureInfo? cultureInfo,
+    private bool ProcessCommandGeneric<T>(TContext context, string commandText, CultureInfo? cultureInfo,
         ICommand<T> command, Delegate commandHandler)
         where T : IArguments, new()
     {
         if (_useCultureInfo && _localizedCommandParser.Parse(command, cultureInfo, commandText) is
-            { Success: true } result)
-            commandHandler.DynamicInvoke(context, result.Arguments);
-        else if (_commandParser.Parse(command, commandText) is { Success: true } result1)
-            commandHandler.DynamicInvoke(context, result1.Arguments);
+            { Success: true, ResultText: {} resultText, Arguments: {} args })
+        {
+            context.Text = resultText;
+            
+            commandHandler.DynamicInvoke(context, args);
+            
+            return true;
+        }
+        else if (_commandParser.Parse(command, commandText) is { Success: true, ResultText: {} resultText1, Arguments: {} args1 })
+        {
+            context.Text = resultText1;
+            
+            commandHandler.DynamicInvoke(context, args1);
+            
+            return true;
+        }
+
+        return false;
     }
 }

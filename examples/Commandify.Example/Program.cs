@@ -1,22 +1,26 @@
-﻿using Commandify.Processing;
+﻿using Commandify;
+using Commandify.Abstractions;
+using Commandify.Builders;
+using Commandify.Example;
+using Commandify.Processing;
 
-var commandProcessorBuilder = new CommandProcessorBuilder<CommandContext>()
-        .UseCommandParser(commandParserBuilder => commandParserBuilder
-            .UseDefaultConfiguration()
-        )
+ICommandParser commandParser = new CommandParserBuilder()
+    .UseDefaultConfiguration().Build();
+
+var commandProcessorBuilder = new CommandProcessorBuilder<CommandContext>(commandParser)
         .UseCommand<EchoCommand, EchoArguments>()
         .UseCommand<PingCommand, PingArguments>()
     ;
 
 var commandProcessor
-    = commandProcessorBuilder.Build(_ => _.Text);
+    = commandProcessorBuilder.Build();
 
 while (true)
 {
-    var input = Console.ReadLine();
+    var commandText = Console.ReadLine();
 
     commandProcessor.Process(new CommandContext
     {
-        Text = input
+        Text = commandText
     });
 }

@@ -1,6 +1,7 @@
 ﻿namespace Commandify.Processing.Abstractions;
 
 public interface ICommandProcessor<TContext>
+    where TContext : ICommandContext
 {
-    void Process(TContext context);
+    bool Process(TContext context);
 }

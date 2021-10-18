@@ -1,4 +1,5 @@
 ﻿using Commandify.Abstractions.Builders;
+using Commandify.Builders;
 using Commandify.Example.Telegram;
 using Commandify.Processing;
 using Commandify.Processing.Abstractions;
@@ -15,14 +16,15 @@ Task StartBotAsync(TelegramBotOptions telegramBotOptions)
 {
     ITelegramBotClient telegramBotClient = new TelegramBotClient(telegramBotOptions.ApiToken);
 
+    CommandTextRetrieverDelegate<TelegramCommandContext<Message>> commandTextRetriever = message => message.Entity.Text;
+
     ICommandProcessorBuilder<TelegramCommandContext<Message>> commandProcessorBuilder =
-        new CommandProcessorBuilder<TelegramCommandContext<Message>>();
+        new CommandProcessorBuilder<TelegramCommandContext<Message>>(new CommandParserBuilder()
+            .UseDefaultConfiguration().Build());
 
     ConfigureCommandProcessor(commandProcessorBuilder);
 
-    CommandTextRetrieverDelegate<TelegramCommandContext<Message>> commandTextRetriever = message => message.Entity.Text;
-
-    var commandProcessor = commandProcessorBuilder.Build(commandTextRetriever);
+    var commandProcessor = commandProcessorBuilder.Build();
 
     var telegramBotUpdateHandler = new TelegramBotUpdateHandler(commandProcessor);
 
@@ -35,15 +37,8 @@ Task StartBotAsync(TelegramBotOptions telegramBotOptions)
     });
 }
 
-void ConfigureCommandProcessor(ICommandProcessorBuilder<TelegramCommandContext<Message>> commandProcessorBuilder)
-{
+void ConfigureCommandProcessor(ICommandProcessorBuilder<TelegramCommandContext<Message>> commandProcessorBuilder) =>
     commandProcessorBuilder
-        .UseCommandParser(ConfigureCommandParser)
-        .UseCommand<EchoCommand>();
-}
-
-void ConfigureCommandParser(ICommandParserBuilder commandParserBuilder)
-{
-    commandParserBuilder
-        .UseDefaultConfiguration();
-}
+        .UseCommand<NumberCommand>(_ => _
+            .UseCommand<NumberIncreaseCommand, NumberArgs>()
+            .UseCommand<NumberDecreaseCommand, NumberArgs>());

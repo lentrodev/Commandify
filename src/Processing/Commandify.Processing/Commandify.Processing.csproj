@@ -8,8 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Commandify\Commandify.csproj"/>
-        <ProjectReference Include="..\Commandify.Processing.Abstractions\Commandify.Processing.Abstractions.csproj"/>
+        <ProjectReference Include="..\..\Commandify\Commandify.csproj" />
+        <ProjectReference Include="..\Commandify.Processing.Abstractions\Commandify.Processing.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

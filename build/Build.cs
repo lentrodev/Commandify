@@ -69,6 +69,10 @@ class Build : NukeBuild
             foreach (var project in Solution.AllProjects.Where(_ =>
                 !_.Name.Contains("Example") && !_.Name.Contains("Build")))
                 DotNetPack(_ => _.SetProject(project)
+                    .SetAssemblyVersion(Version)
+                    .SetFileVersion(Version)
+                    .SetVersion(Version)
+                    .SetInformationalVersion(Version)
                     .SetNoBuild(true)
                     .SetOutputDirectory(ArtifactsDirectory)
                     .SetIncludeSymbols(true)

@@ -77,7 +77,7 @@ public class CommandProcessor<TContext> : ICommandProcessor<TContext>
 
             return true;
         }
-        if (_commandParser.Parse(command, commandText) is { Success: true, ResultText: {} resultText1 })
+        if (_commandParser?.Parse(command, commandText) is { Success: true, ResultText: {} resultText1 })
         {
             context.Text = resultText1;
             
@@ -102,7 +102,7 @@ public class CommandProcessor<TContext> : ICommandProcessor<TContext>
             
             return true;
         }
-        else if (_commandParser.Parse(command, commandText) is { Success: true, ResultText: {} resultText1, Arguments: {} args1 })
+        else if (_commandParser?.Parse(command, commandText) is { Success: true, ResultText: {} resultText1, Arguments: {} args1 })
         {
             context.Text = resultText1;
             
